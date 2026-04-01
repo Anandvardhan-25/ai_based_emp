@@ -45,7 +45,7 @@ export function ShellLayout() {
 
     const ws = new WebSocketClient();
     ws.connect(
-      () => console.log("WebSocket connected"),
+      () => {},
       (notif) => {
         toast("New notification: " + notif.message, { icon: "🔔" });
         window.dispatchEvent(new Event("ws:notification"));

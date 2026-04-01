@@ -7,9 +7,10 @@ export class WebSocketClient {
   
   constructor() {
     const isWss = window.location.protocol === 'https:';
-    const baseUrl = import.meta.env.VITE_API_BASE_URL 
-        ? import.meta.env.VITE_API_BASE_URL.replace(/^https?/, isWss ? 'wss' : 'ws')
-        : `${isWss ? 'wss' : 'ws'}://localhost:8080`;
+    const envUrl = import.meta.env.VITE_API_BASE_URL ?? import.meta.env.REACT_APP_API_URL;
+    const baseUrl = envUrl 
+        ? envUrl.replace(/^https?/, isWss ? 'wss' : 'ws')
+        : `${isWss ? 'wss' : 'ws'}://ai-based-emp.onrender.com`;
         
     this.url = `${baseUrl}/ws`;
   }
