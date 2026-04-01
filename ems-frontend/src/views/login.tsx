@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../state/auth";
 import { Button } from "../ui/button";
@@ -63,6 +63,10 @@ export function LoginPage() {
             {isSubmitting ? "Signing in…" : "Sign in"}
           </Button>
         </form>
+
+        <div className="mt-4 text-center">
+          <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium">Forgot Password?</Link>
+        </div>
 
         <div className="mt-6 text-xs text-slate-500">
           Default admin is created on backend startup. Update via backend env vars or create employees to generate user accounts.

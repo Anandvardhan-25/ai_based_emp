@@ -3,6 +3,7 @@ package com.example.ems.department;
 import com.example.ems.department.dto.DepartmentCreateRequest;
 import com.example.ems.department.dto.DepartmentResponse;
 import com.example.ems.department.dto.DepartmentUpdateRequest;
+import com.example.ems.department.dto.DepartmentMetricsResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -49,5 +50,11 @@ public class DepartmentController {
   public ResponseEntity<Void> delete(@PathVariable UUID id) {
     departmentService.delete(id);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/{id}/metrics")
+  @PreAuthorize("hasAnyRole('ADMIN','HR')")
+  public ResponseEntity<DepartmentMetricsResponse> getMetrics(@PathVariable UUID id) {
+    return ResponseEntity.ok(departmentService.getMetrics(id));
   }
 }

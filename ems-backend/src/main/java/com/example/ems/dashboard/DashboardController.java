@@ -17,7 +17,7 @@ public class DashboardController {
   }
 
   @GetMapping("/summary")
-  @PreAuthorize("hasAnyRole('ADMIN','HR')")
+  @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
   public ResponseEntity<DashboardSummaryResponse> summary() {
     return ResponseEntity.ok(dashboardService.summary());
   }

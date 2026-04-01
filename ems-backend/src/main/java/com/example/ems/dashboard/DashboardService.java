@@ -50,13 +50,47 @@ public class DashboardService {
     long totalLeavesTaken = totalEmployees > 0 ? totalEmployees * 2 : 0;
     long totalLoginHours = totalEmployees > 0 ? totalEmployees * 160 : 0;
 
+    long activeEmployees = employeeRepo.countByDeletedFalse();
+    long inactiveEmployees = 3; // mock
+    long employeesOnLeaveToday = 2; // mock
+
+    List<DashboardSummaryResponse.MonthlyTrend> employeeGrowth = List.of(
+        new DashboardSummaryResponse.MonthlyTrend("Jan", 10),
+        new DashboardSummaryResponse.MonthlyTrend("Feb", 15),
+        new DashboardSummaryResponse.MonthlyTrend("Mar", 28),
+        new DashboardSummaryResponse.MonthlyTrend("Apr", 35),
+        new DashboardSummaryResponse.MonthlyTrend("May", 42),
+        new DashboardSummaryResponse.MonthlyTrend("Jun", (int) activeEmployees)
+    );
+
+    List<DashboardSummaryResponse.LeaveTrend> leaveTrends = List.of(
+        new DashboardSummaryResponse.LeaveTrend("Jan", 5, 10, 2),
+        new DashboardSummaryResponse.LeaveTrend("Feb", 8, 5, 4),
+        new DashboardSummaryResponse.LeaveTrend("Mar", 3, 12, 1),
+        new DashboardSummaryResponse.LeaveTrend("Apr", 10, 8, 5)
+    );
+
+    List<DashboardSummaryResponse.AttendanceSummary> attendanceSummary = List.of(
+        new DashboardSummaryResponse.AttendanceSummary("Mon", 40, 2, 1),
+        new DashboardSummaryResponse.AttendanceSummary("Tue", 38, 4, 2),
+        new DashboardSummaryResponse.AttendanceSummary("Wed", 42, 0, 0),
+        new DashboardSummaryResponse.AttendanceSummary("Thu", 39, 3, 3),
+        new DashboardSummaryResponse.AttendanceSummary("Fri", 35, 8, 5)
+    );
+
     return new DashboardSummaryResponse(
         totalEmployees, 
         dist, 
         recent, 
         totalLeavesTaken, 
         totalLoginHours, 
-        bestEmployee
+        bestEmployee,
+        activeEmployees,
+        inactiveEmployees,
+        employeesOnLeaveToday,
+        employeeGrowth,
+        leaveTrends,
+        attendanceSummary
     );
   }
 }

@@ -12,5 +12,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID>, JpaSp
   Optional<Employee> findByEmailIgnoreCaseAndDeletedFalse(String email);
   long countByDeletedFalse();
   boolean existsByDepartmentIdAndDeletedFalse(UUID departmentId);
+  java.util.List<Employee> findByDepartmentIdAndDeletedFalse(UUID departmentId);
   java.util.List<Employee> findTop10ByDeletedFalseOrderByUpdatedAtDesc();
+  java.util.List<Employee> findByRoleInAndDeletedFalse(java.util.Collection<com.example.ems.domain.Role> roles);
 }

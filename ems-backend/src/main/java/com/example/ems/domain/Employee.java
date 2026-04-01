@@ -14,6 +14,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.CollectionTable;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "employees")
@@ -44,6 +48,11 @@ public class Employee extends AuditedEntity {
 
   @Column(nullable = false)
   private boolean deleted = false;
+
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "employee_skills", joinColumns = @JoinColumn(name = "employee_id"))
+  @Column(name = "skill")
+  private Set<String> skills = new HashSet<>();
 
   public UUID getId() {
     return id;
@@ -107,5 +116,13 @@ public class Employee extends AuditedEntity {
 
   public void setDeleted(boolean deleted) {
     this.deleted = deleted;
+  }
+
+  public Set<String> getSkills() {
+    return skills;
+  }
+
+  public void setSkills(Set<String> skills) {
+    this.skills = skills;
   }
 }

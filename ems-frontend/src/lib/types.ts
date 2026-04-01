@@ -5,7 +5,18 @@ export type Me = {
   role: Role;
 };
 
-export type Department = { id: string; name: string };
+export type Department = {
+  id: string;
+  name: string;
+  managerId?: string | null;
+  managerName?: string | null;
+};
+
+export type DepartmentMetrics = {
+  employeeCount: number;
+  totalSalary: number;
+  averageSalary: number;
+};
 
 export type Employee = {
   id: string;
@@ -15,8 +26,18 @@ export type Employee = {
   department: Department | null;
   salary: number;
   role: Role;
+  skills: string[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type SkillMatchResponse = {
+  employeeId: string;
+  employeeName: string;
+  employeeEmail: string;
+  matchedSkills: string[];
+  missingSkills: string[];
+  matchPercentage: number;
 };
 
 export type PageResponse<T> = {
@@ -34,4 +55,17 @@ export type DashboardSummary = {
   totalLeavesTaken: number;
   totalLoginHours: number;
   bestEmployee: { name: string; department: string; performanceScore: number } | null;
+  activeEmployees: number;
+  inactiveEmployees: number;
+  employeesOnLeaveToday: number;
+  employeeGrowth: Array<{ month: string; count: number }>;
+  leaveTrends: Array<{ month: string; sick: number; casual: number; paid: number }>;
+  attendanceSummary: Array<{ day: string; present: number; absent: number; late: number }>;
+};
+
+export type Notification = {
+  id: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
 };

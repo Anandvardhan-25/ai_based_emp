@@ -30,6 +30,9 @@ export function EmployeeUpsertPage({ mode }: Props) {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const [skillsList, setSkillsList] = useState<string[]>([]);
 
   const {
     register,
@@ -64,6 +67,7 @@ export function EmployeeUpsertPage({ mode }: Props) {
     setValue("departmentId", e.department?.id ?? "");
     setValue("salary", String(e.salary));
     setValue("role", e.role);
+    setSkillsList(e.skills || []);
   }
 
   useEffect(() => {
@@ -112,6 +116,26 @@ export function EmployeeUpsertPage({ mode }: Props) {
       toast.error(getErrorMessage(e));
     } finally {
       setConfirmOpen(false);
+    }
+  }
+
+  async function handleResumeUpload(e: React.FormEvent) {
+    e.preventDefault();
+    if (!resumeFile) return toast.error("Select a PDF file");
+    setUploadingResume(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", resumeFile);
+      const res = await api.post<string[]>(`/api/skills/resume/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      toast.success("Resume processed");
+      setSkillsList(res.data);
+      setResumeFile(null);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setUploadingResume(false);
     }
   }
 
@@ -177,6 +201,35 @@ export function EmployeeUpsertPage({ mode }: Props) {
           </div>
         </form>
       </Card>
+
+      {mode === "edit" ? (
+        <Card className="mt-8 p-5">
+          <div className="text-lg font-semibold mb-2">Resume & Skills</div>
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1">
+              <div className="text-sm font-semibold mb-2">Extracted Skills</div>
+              <div className="flex flex-wrap gap-2">
+                {skillsList.length === 0 ? <span className="text-slate-500 text-sm">No skills found. Upload a resume.</span> : null}
+                {skillsList.map(s => <span key={s} className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs font-bold rounded">{s}</span>)}
+              </div>
+            </div>
+            <div className="flex-1 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6">
+              <form onSubmit={handleResumeUpload} className="flex flex-col gap-3">
+                <div className="text-sm font-semibold">Upload PDF Resume</div>
+                <input 
+                  type="file" 
+                  accept=".pdf" 
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
+                  onChange={e => setResumeFile(e.target.files?.[0] || null)}
+                />
+                <Button type="submit" disabled={!resumeFile || uploadingResume}>
+                  {uploadingResume ? "Processing..." : "Extract Skills"}
+                </Button>
+              </form>
+            </div>
+          </div>
+        </Card>
+      ) : null}
 
       <Modal
         open={confirmOpen}

@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function login(email: string, password: string) {
     try {
-      await api.post<Me>("/api/auth/login", { email, password });
+      await api.post<any>("/api/auth/login", { email, password });
       await refresh();
     } catch (e) {
       toast.error(getErrorMessage(e));

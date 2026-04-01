@@ -9,6 +9,7 @@ import com.example.ems.employee.dto.EmployeeCreateRequest;
 import com.example.ems.employee.dto.EmployeeCreateResponse;
 import com.example.ems.employee.dto.EmployeeResponse;
 import com.example.ems.employee.dto.EmployeeUpdateRequest;
+import com.example.ems.employee.dto.TransferEmployeeRequest;
 import com.example.ems.exception.ConflictException;
 import com.example.ems.exception.NotFoundException;
 import com.example.ems.repository.EmployeeRepository;
@@ -26,6 +27,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -36,17 +38,23 @@ public class EmployeeService {
   private final UserAccountRepository userRepo;
   private final DepartmentService departmentService;
   private final PasswordEncoder passwordEncoder;
+  private final com.example.ems.notification.NotificationService notificationService;
+  private final SimpMessagingTemplate messagingTemplate;
 
   public EmployeeService(
       EmployeeRepository employeeRepo,
       UserAccountRepository userRepo,
       DepartmentService departmentService,
-      PasswordEncoder passwordEncoder
+      PasswordEncoder passwordEncoder,
+      com.example.ems.notification.NotificationService notificationService,
+      SimpMessagingTemplate messagingTemplate
   ) {
     this.employeeRepo = employeeRepo;
     this.userRepo = userRepo;
     this.departmentService = departmentService;
     this.passwordEncoder = passwordEncoder;
+    this.notificationService = notificationService;
+    this.messagingTemplate = messagingTemplate;
   }
 
   @Transactional(readOnly = true)
@@ -86,6 +94,12 @@ public class EmployeeService {
     return toResponse(emp);
   }
 
+  @Transactional(readOnly = true)
+  public EmployeeResponse getByEmail(String email, UserPrincipal principal) {
+    Employee emp = employeeRepo.findByEmailIgnoreCaseAndDeletedFalse(email).orElseThrow(() -> new NotFoundException("Employee not found"));
+    return toResponse(emp);
+  }
+
   @Transactional
   public EmployeeCreateResponse create(EmployeeCreateRequest req, UserPrincipal actor) {
     String email = req.email().trim().toLowerCase(Locale.ROOT);
@@ -117,6 +131,9 @@ public class EmployeeService {
     user.setRole(req.role());
     user.setEnabled(true);
     userRepo.save(user);
+
+    notificationService.notifyAdmins("New employee added: " + emp.getName());
+    messagingTemplate.convertAndSend("/topic/dashboard", "UPDATE");
 
     log.info("User {} created employee {} ({})", actor.email(), emp.getId(), email);
     return new EmployeeCreateResponse(toResponse(emp), req.password() == null || req.password().isBlank() ? rawPassword : null);
@@ -152,6 +169,7 @@ public class EmployeeService {
       userRepo.save(user);
     }
 
+    messagingTemplate.convertAndSend("/topic/dashboard", "UPDATE");
     log.info("User {} updated employee {}", actor.email(), id);
     return toResponse(emp);
   }
@@ -167,7 +185,20 @@ public class EmployeeService {
       userRepo.save(user);
     });
 
+    messagingTemplate.convertAndSend("/topic/dashboard", "UPDATE");
     log.info("User {} deleted employee {}", actor.email(), id);
+  }
+
+  @Transactional
+  public EmployeeResponse transfer(UUID id, TransferEmployeeRequest req, UserPrincipal actor) {
+    Employee emp = employeeRepo.findByIdAndDeletedFalse(id).orElseThrow(() -> new NotFoundException("Employee not found"));
+    Department dept = departmentService.getOrNull(req.departmentId());
+    emp.setDepartment(dept);
+    employeeRepo.save(emp);
+    
+    messagingTemplate.convertAndSend("/topic/dashboard", "UPDATE");
+    log.info("User {} transferred employee {} to department {}", actor.email(), id, req.departmentId());
+    return toResponse(emp);
   }
 
   private EmployeeResponse toResponse(Employee e) {
@@ -183,6 +214,7 @@ public class EmployeeService {
         dept,
         e.getSalary(),
         e.getRole(),
+        e.getSkills(),
         e.getCreatedAt(),
         e.getUpdatedAt()
     );

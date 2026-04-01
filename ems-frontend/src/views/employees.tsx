@@ -10,6 +10,9 @@ import { Input } from "../ui/input";
 import { Pagination } from "../ui/pagination";
 import { RoleBadge } from "../ui/badge";
 import { Select } from "../ui/select";
+import { Modal } from "../ui/modal";
+import { Skeleton } from "../ui/skeleton";
+import { useAuth } from "../state/auth";
 
 export function EmployeesPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -22,6 +25,13 @@ export function EmployeesPage() {
   const [sortBy, setSortBy] = useState("name");
   const [dir, setDir] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(true);
+
+  const { me } = useAuth();
+  const isManager = me?.role === "ADMIN" || me?.role === "HR";
+
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferEmp, setTransferEmp] = useState<Employee | null>(null);
+  const [transferDeptId, setTransferDeptId] = useState("");
 
   async function loadDepartments() {
     try {
@@ -68,6 +78,24 @@ export function EmployeesPage() {
     setPage(0);
     loadEmployees();
   };
+
+  function startTransfer(e: Employee) {
+    setTransferEmp(e);
+    setTransferDeptId(e.department?.id || "");
+    setTransferOpen(true);
+  }
+
+  async function saveTransfer() {
+    if (!transferEmp || !transferDeptId) return toast.error("Select a department");
+    try {
+      await api.put(`/api/employees/${transferEmp.id}/department`, { departmentId: transferDeptId });
+      toast.success("Employee transferred");
+      setTransferOpen(false);
+      loadEmployees();
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    }
+  }
 
   const sortLabel = useMemo(() => {
     const map: Record<string, string> = { name: "Name", email: "Email", salary: "Salary", role: "Role" };
@@ -121,9 +149,11 @@ export function EmployeesPage() {
           >
             {dir === "asc" ? "Asc" : "Desc"}
           </Button>
-          <Link to="/employees/new">
-            <Button>Add Employee</Button>
-          </Link>
+          {isManager && (
+            <Link to="/employees/new">
+              <Button>Add Employee</Button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -142,7 +172,7 @@ export function EmployeesPage() {
                 <th className="text-left px-5 py-3 font-semibold">Department</th>
                 <th className="text-left px-5 py-3 font-semibold">Role</th>
                 <th className="text-right px-5 py-3 font-semibold">Salary</th>
-                <th className="text-right px-5 py-3 font-semibold">Action</th>
+                {isManager && <th className="text-right px-5 py-3 font-semibold">Action</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -155,17 +185,37 @@ export function EmployeesPage() {
                     <RoleBadge role={e.role as Role} />
                   </td>
                   <td className="px-5 py-3 text-right tabular-nums">{Number(e.salary).toLocaleString()}</td>
-                  <td className="px-5 py-3 text-right">
-                    <Link to={`/employees/${e.id}`}>
-                      <Button variant="secondary">Edit</Button>
-                    </Link>
-                  </td>
+                  {isManager && (
+                    <td className="px-5 py-3 text-right space-x-2">
+                      <Button variant="secondary" onClick={() => startTransfer(e)}>Transfer</Button>
+                      <Link to={`/employees/${e.id}`}>
+                        <Button variant="secondary">Edit</Button>
+                      </Link>
+                    </td>
+                  )}
                 </tr>
               ))}
-              {items.length === 0 ? (
+              {loading && items.length === 0 ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-5 py-3"><Skeleton className="h-4 w-32" /></td>
+                    <td className="px-5 py-3"><Skeleton className="h-4 w-48" /></td>
+                    <td className="px-5 py-3"><Skeleton className="h-4 w-24" /></td>
+                    <td className="px-5 py-3"><Skeleton className="h-6 w-16 rounded-full" /></td>
+                    <td className="px-5 py-3"><Skeleton className="h-4 w-16 ml-auto" /></td>
+                    {isManager && (
+                      <td className="px-5 py-3 flex justify-end gap-2">
+                        <Skeleton className="h-8 w-20" />
+                        <Skeleton className="h-8 w-16" />
+                      </td>
+                    )}
+                  </tr>
+                ))
+              ) : null}
+              {!loading && items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-slate-500">
-                    {loading ? "Loading…" : "No employees found."}
+                  <td colSpan={isManager ? 6 : 5} className="px-5 py-12 text-center text-slate-500 dark:text-slate-400">
+                    No employees found matching your criteria.
                   </td>
                 </tr>
               ) : null}
@@ -176,6 +226,25 @@ export function EmployeesPage() {
           <Pagination page={page} totalPages={totalPages} onChange={setPage} />
         </div>
       </Card>
+
+      <Modal
+        open={transferOpen}
+        title={`Transfer: ${transferEmp?.name}`}
+        onClose={() => setTransferOpen(false)}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setTransferOpen(false)}>Cancel</Button>
+            <Button onClick={saveTransfer}>Transfer</Button>
+          </div>
+        }
+      >
+        <Select label="New Department" value={transferDeptId} onChange={e => setTransferDeptId(e.target.value)}>
+          <option value="">Select department...</option>
+          {departments.map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </Select>
+      </Modal>
     </div>
   );
 }

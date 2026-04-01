@@ -13,6 +13,7 @@ public record EmployeeResponse(
     DepartmentInfo department,
     BigDecimal salary,
     Role role,
+    java.util.Set<String> skills,
     Instant createdAt,
     Instant updatedAt
 ) {

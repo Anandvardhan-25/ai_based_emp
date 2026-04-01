@@ -4,6 +4,8 @@ import java.util.UUID;
 
 public record DepartmentResponse(
     UUID id,
-    String name
+    String name,
+    UUID managerId,
+    String managerName
 ) {}
 

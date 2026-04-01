@@ -5,6 +5,7 @@ import com.example.ems.employee.dto.EmployeeCreateRequest;
 import com.example.ems.employee.dto.EmployeeCreateResponse;
 import com.example.ems.employee.dto.EmployeeResponse;
 import com.example.ems.employee.dto.EmployeeUpdateRequest;
+import com.example.ems.employee.dto.TransferEmployeeRequest;
 import com.example.ems.security.UserPrincipal;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -32,7 +33,7 @@ public class EmployeeController {
   }
 
   @GetMapping
-  @PreAuthorize("hasAnyRole('ADMIN','HR')")
+  @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
   public ResponseEntity<PageResponse<EmployeeResponse>> list(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size,
@@ -50,6 +51,11 @@ public class EmployeeController {
       @AuthenticationPrincipal UserPrincipal principal
   ) {
     return ResponseEntity.ok(employeeService.get(id, principal));
+  }
+
+  @GetMapping("/me")
+  public ResponseEntity<EmployeeResponse> getMe(@AuthenticationPrincipal UserPrincipal principal) {
+    return ResponseEntity.ok(employeeService.getByEmail(principal.email(), principal));
   }
 
   @PostMapping
@@ -76,5 +82,15 @@ public class EmployeeController {
   public ResponseEntity<Void> delete(@PathVariable UUID id, @AuthenticationPrincipal UserPrincipal principal) {
     employeeService.delete(id, principal);
     return ResponseEntity.noContent().build();
+  }
+
+  @PutMapping("/{id}/department")
+  @PreAuthorize("hasAnyRole('ADMIN','HR')")
+  public ResponseEntity<EmployeeResponse> transfer(
+      @PathVariable UUID id,
+      @Valid @RequestBody TransferEmployeeRequest req,
+      @AuthenticationPrincipal UserPrincipal principal
+  ) {
+    return ResponseEntity.ok(employeeService.transfer(id, req, principal));
   }
 }
