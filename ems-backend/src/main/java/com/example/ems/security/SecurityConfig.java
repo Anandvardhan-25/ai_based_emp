@@ -19,22 +19,15 @@ public class SecurityConfig {
   }
 
   @Bean
-  SecurityFilterChain securityFilterChain(
-      HttpSecurity http
-  ) throws Exception {
-    http
-        .cors(Customizer.withDefaults())
-        .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/auth/login", "/api/auth/forgot-password", "/api/auth/verify-otp", "/api/auth/reset-password").permitAll()
-            .requestMatchers("/ws/**").permitAll()
-            .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-            .anyRequest().authenticated()
-        )
-        .httpBasic(basic -> basic.disable())
-        .formLogin(form -> form.disable());
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+      http
+          .cors(Customizer.withDefaults())
+          .csrf(csrf -> csrf.disable())
+          .authorizeHttpRequests(auth -> auth
+              .anyRequest().permitAll()
+          );
 
-    return http.build();
+      return http.build();
   }
 
   @Bean
