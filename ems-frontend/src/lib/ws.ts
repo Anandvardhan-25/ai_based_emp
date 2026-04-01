@@ -8,7 +8,7 @@ export class WebSocketClient {
   constructor() {
     const isWss = window.location.protocol === 'https:';
     const baseUrl = import.meta.env.VITE_API_BASE_URL 
-        ? import.meta.env.VITE_API_BASE_URL.replace(/^http/, 'ws')
+        ? import.meta.env.VITE_API_BASE_URL.replace(/^https?/, isWss ? 'wss' : 'ws')
         : `${isWss ? 'wss' : 'ws'}://localhost:8080`;
         
     this.url = `${baseUrl}/ws`;

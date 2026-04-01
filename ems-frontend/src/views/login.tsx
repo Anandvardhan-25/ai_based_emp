@@ -69,7 +69,7 @@ export function LoginPage() {
         </div>
 
         <div className="mt-6 text-xs text-slate-500">
-          Default admin is created on backend startup. Update via backend env vars or create employees to generate user accounts.
+          Welcome to Anand's Employee Management System.
         </div>
       </Card>
     </div>
