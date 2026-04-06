@@ -84,6 +84,9 @@ public class AuthController {
 
   @GetMapping("/me")
   public ResponseEntity<MeResponse> me(Authentication auth) {
+    if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+      return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+    }
     UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
     return ResponseEntity.ok(new MeResponse(principal.email(), principal.role()));
   }
